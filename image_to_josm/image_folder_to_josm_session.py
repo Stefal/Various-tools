@@ -182,10 +182,12 @@ def open_session_in_josm(session_file_path, remote_port=8111):
 def arg_parse():
     """ Parse the command line you use to launch the script
     """
-    parser = argparse.ArgumentParser(description="Script to load several folders containing jpeg images and nmea/gpx"
-                                                 "trace in separate layer in the Josm editor (for OpenStreetMap)."
-                                                 " It will write a .jos session file and send it to Josm thru its "
-                                                 "remote feature (Load local files should be enabled in the preferences)"
+    parser = argparse.ArgumentParser(description=" Script to load several folders containing jpeg images and nmea/gpx"
+                                                 " trace in separate layer in the Josm editor (for OpenStreetMap)."
+                             " It will write a .jos session file and send it to Josm thru its remote feature "
+                             "(Load local files should be enabled in the preferences)"
+                             "Ex: python image_folder_to_josm_session.py ~/home/pic/ -s mysession.jos -g mytrace.gpx -j"
+                             "Ex: python image_folder_to_josm_session.py -j"
                                      )
     parser.add_argument("-v", "--version", action="version", version="version 0.1")
     parser.add_argument("source", nargs="?",
