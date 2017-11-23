@@ -3,9 +3,15 @@
 from __future__ import division
 from __future__ import print_function
 
-import os, sys, datetime, time, argparse, exifread
+import argparse
+import datetime
+import os
+import sys
+import time
 import xml.etree.ElementTree as ET
 from collections import namedtuple
+
+import exifread
 
 Picture_infos = namedtuple('Picture_infos', ['path', 'DateTimeOriginal', 'Longitude', 'Latitude',
                                              'Ele', 'ImgDirection'])
@@ -25,19 +31,19 @@ def list_images(directory):
     # get DateTimeOriginal data from the images and sort the list by timestamp
     # using exifread 
     for filepath in file_list:
-        with open(filepath, 'rb') as file:
-            tags = exifread.process_file(file, details=False)
+        with open(filepath, 'rb') as f:
+            tags = exifread.process_file(f, details=False)
 
         # If picture has coordinates and timestamp
         if 'GPS GPSLatitude' in tags and 'GPS GPSLongitude' in tags and 'EXIF DateTimeOriginal' in tags:
             # Read and convert latitude
             deg, mn, sec = [ratio_to_float(i) for i in tags['GPS GPSLatitude'].values]
             hemis = tags['GPS GPSLatitudeRef'].values
-            lat = DMStoDD(deg, mn, sec, hemis)
+            lat = dms_to_dd(deg, mn, sec, hemis)
             # Read and convert longitude
             deg, mn, sec = [ratio_to_float(i) for i in tags['GPS GPSLongitude'].values]
             hemis = tags['GPS GPSLongitudeRef'].values
-            lon = DMStoDD(deg, mn, sec, hemis)
+            lon = dms_to_dd(deg, mn, sec, hemis)
             # Read and convert timestamp
             timestamp = datetime.datetime.strptime(tags['EXIF DateTimeOriginal'].values, "%Y:%m:%d %H:%M:%S")
             # Read, convert, and add subsecond value to the timestamp
@@ -56,7 +62,7 @@ def list_images(directory):
     return images_list
 
 
-def DMStoDD(degrees, minutes, seconds, hemisphere):
+def dms_to_dd(degrees, minutes, seconds, hemisphere):
     """ Convert from degrees, minutes, seconds to decimal degrees. """
     dms = float(degrees) + float(minutes) / 60 + float(seconds) / 3600
     if hemisphere == "W" or hemisphere == "S":
@@ -152,7 +158,8 @@ def open_session_in_josm(session_file_path, remote_port=8111):
     """Send the session file to Josm. "Remote control" and "open local files" must be enable in the Josm settings
      :param session_file_path: the session file path (.jos)
      :param remote_port: the port to talk to josm. Default is 8111"""
-    import requests, posixpath
+    import requests
+    import posixpath
 
     if os.sep != posixpath.sep:
         session_file_path = session_file_path.replace(os.sep, posixpath.sep)
@@ -174,8 +181,9 @@ def arg_parse():
     parser.add_argument("source", nargs="?",
                         help="Path source of the folders with the pictures. Without this parameter, "
                              "the script will use the current directory as the source", default=os.getcwd())
+    parser.add_argument("-s", "--session_name", help="session's filename", default="session.jos")
     parser.add_argument("-g", "--gpxfile", help="Path to the gpx/nmea file. Without this parameter, "
-                                                "the script will search in the current directory")
+                                                "the script will search for them")
     parser.add_argument("-j", "--josm", help="Load the pictures in Josm (must be running)", action="store_true")
 
     args = parser.parse_args()
@@ -238,7 +246,7 @@ if __name__ == '__main__':
         image_list.append(list_images(path))
 
     # Write a josm session file 
-    session_file_path = os.path.abspath(os.path.join(args.source, "session.jos"))
+    session_file_path = os.path.abspath(os.path.join(args.source, args.session_name))
     write_josm_session(image_list, session_file_path, directory_list, args.gpxfile)
 
     if args.josm:
