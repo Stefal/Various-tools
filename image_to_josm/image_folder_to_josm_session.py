@@ -159,11 +159,11 @@ def open_session_in_josm(session_file_path, remote_port=8111):
     print("Opening the session in Josm....", end="")
     try:
         r = requests.get("http://127.0.0.1:" + str(remote_port) + "/open_file?filename=" + session_file_path, timeout=5)
-        print("Success") if r.status_code == 200 else "failed..." + str(r.status_code)
+        print("Success" if r.status_code == 200 else "failed..." + str(r.status_code))
         r.close()
     except requests.exceptions.RequestException as e:
         print(e)
-
+    print("\n")
 
 
 def arg_parse():
