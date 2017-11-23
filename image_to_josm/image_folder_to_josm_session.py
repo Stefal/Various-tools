@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+"""
+Script to load several folders containing jpeg images and nmea/gpx trace in separate layer
+in the josm editor (for OpenStreetMap)
+"""
 from __future__ import division
 from __future__ import print_function
 
@@ -177,17 +182,23 @@ def open_session_in_josm(session_file_path, remote_port=8111):
 def arg_parse():
     """ Parse the command line you use to launch the script
     """
-    parser = argparse.ArgumentParser(description="Script to ", version="0.1")
+    parser = argparse.ArgumentParser(description="Script to load several folders containing jpeg images and nmea/gpx"
+                                                 "trace in separate layer in the Josm editor (for OpenStreetMap)."
+                                                 " It will write a .jos session file and send it to Josm thru its "
+                                                 "remote feature (Load local files should be enabled in the preferences)"
+                                     )
+    parser.add_argument("-v", "--version", action="version", version="version 0.1")
     parser.add_argument("source", nargs="?",
                         help="Path source of the folders with the pictures. Without this parameter, "
                              "the script will use the current directory as the source", default=os.getcwd())
-    parser.add_argument("-s", "--session_name", help="session's filename", default="session.jos")
+    parser.add_argument("-s", "--session_name", help="session's filename. default name is session.jos",
+                        default="session.jos")
     parser.add_argument("-g", "--gpxfile", help="Path to the gpx/nmea file. Without this parameter, "
                                                 "the script will search for them")
-    parser.add_argument("-j", "--josm", help="Load the pictures in Josm (must be running)", action="store_true")
+    parser.add_argument("-j", "--josm", help="Load the images in Josm (must be running)", action="store_true")
 
     args = parser.parse_args()
-    print(args)
+
     return args
 
 
