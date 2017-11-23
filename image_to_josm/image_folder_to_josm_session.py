@@ -7,8 +7,9 @@ import os, sys, datetime, time, argparse, exifread
 import xml.etree.ElementTree as ET
 from collections import namedtuple
 
+Picture_infos = namedtuple('Picture_infos', ['path', 'DateTimeOriginal', 'Longitude', 'Latitude',
+                                             'Ele', 'ImgDirection'])
 
-Picture_infos = namedtuple('Picture_infos', ['path', 'DateTimeOriginal', 'Longitude', 'Latitude', 'Ele', 'ImgDirection'])
 
 def list_images(directory):
     """
@@ -26,7 +27,7 @@ def list_images(directory):
     for filepath in file_list:
         with open(filepath, 'rb') as file:
             tags = exifread.process_file(file, details=False)
-        
+
         # If picture has coordinates and timestamp
         if 'GPS GPSLatitude' in tags and 'GPS GPSLongitude' in tags and 'EXIF DateTimeOriginal' in tags:
             # Read and convert latitude
@@ -37,32 +38,33 @@ def list_images(directory):
             deg, mn, sec = [ratio_to_float(i) for i in tags['GPS GPSLongitude'].values]
             hemis = tags['GPS GPSLongitudeRef'].values
             lon = DMStoDD(deg, mn, sec, hemis)
-            #Read and convert timestamp
+            # Read and convert timestamp
             timestamp = datetime.datetime.strptime(tags['EXIF DateTimeOriginal'].values, "%Y:%m:%d %H:%M:%S")
-            #Read, convert, and add subsecond value to the timestamp
+            # Read, convert, and add subsecond value to the timestamp
             subsec = tags['EXIF SubSecTimeOriginal'].values if 'EXIF SubSecTimeOriginal' in tags else ""
-            timestamp.replace(microsecond = int(float("0." + subsec)*1000000))
-            #Read and convert altitude
+            timestamp.replace(microsecond=int(float("0." + subsec) * 1000000))
+            # Read and convert altitude
             altitude = ratio_to_float(list(tags['GPS GPSAltitude'].values)[0]) if 'GPS GPSAltitude' in tags else ""
-            #Read and convert bearing
-            imgDirection = ratio_to_float(list(tags['GPS GPSImgDirection'].values)[0]) if 'GPS GPSImgDirection' in tags else ""
-            
-            #create new namedtuple
+            # Read and convert bearing
+            imgDirection = ratio_to_float(
+                list(tags['GPS GPSImgDirection'].values)[0]) if 'GPS GPSImgDirection' in tags else ""
+
+            # create new namedtuple
             images_list.append(Picture_infos(filepath, timestamp, lon, lat, altitude, imgDirection))
 
-    images_list.sort(key=lambda file: file.DateTimeOriginal)
+    images_list.sort(key=lambda imgfile: imgfile.DateTimeOriginal)
     return images_list
-    
-    
+
+
 def DMStoDD(degrees, minutes, seconds, hemisphere):
-    ''' Convert from degrees, minutes, seconds to decimal degrees. '''
+    """ Convert from degrees, minutes, seconds to decimal degrees. """
     dms = float(degrees) + float(minutes) / 60 + float(seconds) / 3600
     if hemisphere == "W" or hemisphere == "S":
         dms = -1 * dms
 
     return dms
 
-    
+
 def ratio_to_float(value):
     """convert a ration to a float value"""
     float_value = float(value.num / value.den)
@@ -95,11 +97,12 @@ def write_josm_session(piclists, session_file_path, cam_names, gpx_file=None):
     proj_id.text = "core:mercator"
     proj_core = ET.SubElement(projection, "code")
     proj_core.text = "EPSG:3857"
-    #TODO gérer les cas avec des dossiers sans images (les supprimer avant la suite ???)
-    #TODO nom du dossier sans l'abspath
+    # TODO gérer les cas avec des dossiers sans images (les supprimer avant la suite ???)
+    # TODO nom du dossier sans l'abspath
     for i, piclist in enumerate(piclists):
         layer = ET.SubElement(layers, "layer")
-        layer.attrib = {"index": str(i), "name": str(os.path.basename(cam_names[i])), "type": "geoimage", "version": str(0.1),
+        layer.attrib = {"index": str(i), "name": str(os.path.basename(cam_names[i])), "type": "geoimage",
+                        "version": str(0.1),
                         "visible": "true"}
 
         show_thumb = ET.SubElement(layer, "show-thumbnails")
@@ -148,20 +151,21 @@ def open_session_in_josm(session_file_path, remote_port=8111):
     """Send the session file to Josm. "Remote control" and "open local files" must be enable in the Josm settings
      :param session_file_path: the session file path (.jos)
      :param remote_port: the port to talk to josm. Default is 8111"""
-    import urllib2, posixpath
+    import requests, posixpath
 
     if os.sep != posixpath.sep:
         session_file_path = session_file_path.replace(os.sep, posixpath.sep)
 
     print("Opening the session in Josm....", end="")
-    r = urllib2.urlopen("http://127.0.0.1:" + str(remote_port) + "/open_file?filename=" + session_file_path)
-    answer = r.read()
-    print("Success!") if "OK" in answer else print("Error!")
+    try:
+        r = requests.get("http://127.0.0.1:" + str(remote_port) + "/open_file?filename=" + session_file_path, timeout=5)
+    except requests.exceptions.RequestException as e:
+        print(e)
+
+    print("Success!") if "OK" in r.text else print("Error!")
     r.close()
 
 
-    
-    
 def arg_parse():
     """ Parse the command line you use to launch the script
     """
@@ -176,7 +180,6 @@ def arg_parse():
     args = parser.parse_args()
     print(args)
     return args
-
 
 
 def find_file(directory, file_extension):
@@ -222,8 +225,6 @@ if __name__ == '__main__':
     if args.gpxfile is None:
         args.gpxfile = find_file(args.source, "gpx")
 
-
-
     # Trying to find the folders containing the pictures
     directory_list = [os.path.abspath(i) for i in os.listdir(args.source) if os.path.isdir(i)]
 
@@ -238,8 +239,6 @@ if __name__ == '__main__':
     # Write a josm session file 
     session_file_path = os.path.abspath(os.path.join(args.source, "session.jos"))
     write_josm_session(image_list, session_file_path, directory_list, args.gpxfile)
-    
+
     if args.josm:
         open_session_in_josm(session_file_path)
-
-
