@@ -241,7 +241,6 @@ if __name__ == '__main__':
 
     # Trying to find a nmea file in the working directory if none is given in the command line
     if args.gpxfile is None:
-        print("=" * 30)
         args.gpxfile = find_file(args.source, "nmea")
     # Or a gpx file if there is no nmea file
     if args.gpxfile is None:
