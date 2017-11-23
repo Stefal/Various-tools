@@ -255,7 +255,7 @@ if __name__ == '__main__':
     # Searching for all the jpeg images
     image_list = []
     print("=" * 80)
-    print("Searching for jpeg images in ... ")
+    print("Searching for jpeg images, gpx and nmea files in ... ")
     for path in directory_list:
         print(path)
         image_list.append(list_images(path))
