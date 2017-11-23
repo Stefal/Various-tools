@@ -121,7 +121,7 @@ def write_josm_session(piclists, session_file_path, cam_names, gpx_file=None):
             g_exif_orientation = ET.SubElement(geoimage, "exif-orientation")
             g_exif_orientation.text = "1"
             g_exif_time = ET.SubElement(geoimage, "exif-time")
-            # josm concatenate the timestamp second and microsecond (1531241239.643 becomes 1531241239643
+            # josm concatenate the timestamp second and milliseconds (1531241239.643 becomes 1531241239643
             g_exif_time.text = str(int(time.mktime(pic.DateTimeOriginal.timetuple()))) + "%.3d" % round(
                 pic.DateTimeOriginal.microsecond / float(1000), 0)
             g_exif_direction = ET.SubElement(geoimage, "exif-image-direction")
@@ -132,11 +132,10 @@ def write_josm_session(piclists, session_file_path, cam_names, gpx_file=None):
     if gpx_file is not None:
         for i, gpx in enumerate(gpx_file):
             gpx_layer = ET.SubElement(layers, "layer")
-            gpx_layer.attrib = {"index": str(len(piclists) + 1 + i), "name": gpx.split("\\")[-1], "type": "tracks",
+            gpx_layer.attrib = {"index": str(len(piclists) + 1 + i), "name": os.path.basename(gpx), "type": "tracks",
                                 "version": "0.1", "visible": "true"}
             gpx_file_layer = ET.SubElement(gpx_layer, "file")
-            gpx_file_layer.text = "file:/" + gpx.replace("\\", "/")
-
+            gpx_file_layer.text = "file://" + gpx.replace("\\", "/")
     myxml = ET.ElementTree(root)
 
     try:
