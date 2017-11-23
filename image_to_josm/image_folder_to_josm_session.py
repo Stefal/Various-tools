@@ -160,10 +160,10 @@ def open_session_in_josm(session_file_path, remote_port=8111):
     try:
         r = requests.get("http://127.0.0.1:" + str(remote_port) + "/open_file?filename=" + session_file_path, timeout=5)
         print("Success")
+        r.close()
     except requests.exceptions.RequestException as e:
         print(e)
 
-    r.close()
 
 
 def arg_parse():
