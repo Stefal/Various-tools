@@ -5,16 +5,16 @@
 Script to load several folders containing jpeg images and nmea/gpx trace in separate layer
 in the josm editor (for OpenStreetMap)
 """
-
-
+from __future__ import division
+from __future__ import print_function
 
 import argparse
 import datetime
 import os
 import sys
 import time
-import urllib.request, urllib.parse, urllib.error
-import urllib.parse
+import urllib
+import urlparse
 import xml.etree.ElementTree as ET
 from collections import namedtuple
 
@@ -150,7 +150,7 @@ def write_josm_session(piclists, session_file_path, cam_names, gpx_file=None):
             gpx_file_layer = ET.SubElement(gpx_layer, "file")
             # linux : file:/home/... or file:///home/... but NOT file://home/...
             # windows : file:/e:/images/...  or file:///e:/images/... but NOT file://e:/images/...
-            gpx_file_layer.text = urllib.parse.urljoin('file:', urllib.request.pathname2url(gpx))
+            gpx_file_layer.text = urlparse.urljoin('file:', urllib.pathname2url(gpx))
     myxml = ET.ElementTree(root)
 
     try:
