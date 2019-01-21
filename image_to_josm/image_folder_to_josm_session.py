@@ -150,7 +150,7 @@ def write_josm_session(piclists, session_file_path, cam_names, gpx_file=None):
             gpx_file_layer = ET.SubElement(gpx_layer, "file")
             # linux : file:/home/... or file:///home/... but NOT file://home/...
             # windows : file:/e:/images/...  or file:///e:/images/... but NOT file://e:/images/...
-            gpx_file_layer.text = urlparse.urljoin('file:', urllib.pathname2url(gpx)
+            gpx_file_layer.text = urlparse.urljoin('file:', urllib.pathname2url(gpx))
     myxml = ET.ElementTree(root)
 
     try:
