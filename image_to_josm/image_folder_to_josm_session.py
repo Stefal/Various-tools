@@ -14,7 +14,6 @@ import os
 import sys
 import time
 import urllib.request, urllib.parse, urllib.error
-import urllib.parse
 import xml.etree.ElementTree as ET
 from collections import namedtuple
 
